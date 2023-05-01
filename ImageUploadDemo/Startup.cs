@@ -19,25 +19,6 @@ namespace ImageUploadDemo
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddCors(options =>
-            //{
-            //    options.AddPolicy("MyPolicy",
-            //        builder =>
-            //        {
-            //            builder
-            //                .AllowAnyOrigin()
-            //                .AllowAnyHeader()
-            //                .AllowAnyMethod();
-            //        });
-            //});
-
-
-            //services.AddSignalR(opt =>
-            //        opt.KeepAliveInterval = TimeSpan.FromSeconds(10)
-            //    //opt.KeepAliveInterval = TimeSpan.FromDays(1)
-            //);
-
-
             services.AddCors(options => options.AddPolicy("CorsPolicy",
                 builder =>
                 {
@@ -56,37 +37,25 @@ namespace ImageUploadDemo
             services.AddMvc();
             services.AddTransient<ConfigHelper>();
             services.AddTransient<NotifyService>();
-            //services.AddTransient<ImageHub>();
-            //services.AddTransient<IHubContext, ImageHub>();
 
             services.AddSignalR();
         }
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            //if (env.IsDevelopment())
-            //{
-            //    app.UseDeveloperExceptionPage();
-            //}
-
             app.UseCors("CorsPolicy");
-            //app.UseCors(b => b
-            //    .AllowAnyOrigin()
-            //    .AllowAnyMethod()
-            //    .AllowAnyHeader());
+            
+            // app.UseHttpsRedirection();
+            // app.UseStaticFiles();
+            // app.UseRouting();
+            // app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<ImageHub>("/imageHub");
+                endpoints.MapControllers();
             });
-            //app.UseMvc();
-            
-            
-            
-            //app.Run(async (context) =>
-            //{
-            //    await context.Response.WriteAsync("MVC didn't find anything!");
-            //});
-
+            // app.MapHub<ImageHub>("/imageHub");
+            // app.UseMvc();
         }
     }
 }

@@ -15,4 +15,8 @@
   <ItemGroup>
     <Folder Include="Controllers\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Properties\PublishProfiles\ac-upload-backend - Web Deploy.pubxml" />
+  </ItemGroup>
 </Project>
