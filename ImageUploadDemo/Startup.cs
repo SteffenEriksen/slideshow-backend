@@ -74,11 +74,14 @@ namespace ImageUploadDemo
             //    .AllowAnyMethod()
             //    .AllowAnyHeader());
 
-            app.UseSignalR(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapHub<ImageHub>("/imageHub");
+                endpoints.MapHub<ImageHub>("/imageHub");
             });
-            app.UseMvc();
+            //app.UseMvc();
+            
+            
+            
             //app.Run(async (context) =>
             //{
             //    await context.Response.WriteAsync("MVC didn't find anything!");
