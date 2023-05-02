@@ -51,8 +51,8 @@ namespace ImageUploadDemo
             
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<ImageHub>("/imageHub");
                 endpoints.MapControllers();
+                endpoints.MapHub<ImageHub>("/imageHub");
             });
             // app.MapHub<ImageHub>("/imageHub");
             // app.UseMvc();
