@@ -15,7 +15,21 @@ namespace ImageUploadDemo
             var builder = WebApplication.CreateBuilder(args);
             // Add services to the container.
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddCors(options => options.AddPolicy("CorsPolicy",
+                builder =>
+                {
+                    builder.AllowAnyMethod().AllowAnyHeader()
+                        .WithOrigins(
+                            "http://localhost:3000", 
+                            "https://ac-slide.azurewebsites.net", 
+                            "https://ac-upload.azurewebsites.net",
+                            "http://andersogceline.com",
+                            "https://andersogceline.com"
+                        )
+                        .AllowCredentials();
+                })
+            );
+            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();
             
@@ -23,8 +37,8 @@ namespace ImageUploadDemo
             builder.Services.AddTransient<NotifyService>();
             
             var app = builder.Build();
-            // Configure the HTTP request pipeline.
-
+            app.UseCors("CorsPolicy");
+            
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
