@@ -199,6 +199,14 @@ namespace ImageUploadDemo.Controllers
         }
 
 
+        [HttpGet]
+        [Route("GetHealth")]
+        public async Task<IActionResult> GetHealth()
+        {
+            return Ok("healthy");
+        }
+
+
         private async Task<NextNum> GetNextImage(int getNumber)
         {
             if (getNumber < 1) getNumber = 1;
