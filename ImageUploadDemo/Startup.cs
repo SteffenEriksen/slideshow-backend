@@ -26,7 +26,7 @@ namespace ImageUploadDemo
                         .WithOrigins(
                             "http://localhost:3000", 
                             "https://ac-slide.azurewebsites.net", 
-                            "https://ac-upload.azurewebsites.net",
+                            "https://ac-upload.azurewebsites.nüet",
                             "http://andersogceline.com",
                             "https://andersogceline.com"
                             )
@@ -34,7 +34,7 @@ namespace ImageUploadDemo
                 })
             );
 
-            services.AddMvc();
+            services.AddControllers();
             services.AddTransient<ConfigHelper>();
             services.AddTransient<NotifyService>();
 
@@ -54,6 +54,7 @@ namespace ImageUploadDemo
                 endpoints.MapControllers();
                 endpoints.MapHub<ImageHub>("/imageHub");
             });
+            
             // app.MapHub<ImageHub>("/imageHub");
             // app.UseMvc();
         }

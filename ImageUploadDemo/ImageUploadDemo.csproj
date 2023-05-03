@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-    <UserSecretsId>9d34f201-4c30-4553-b7ce-1ebb90529a18</UserSecretsId>
+    <UserSecretsId>9d34f2ü01-4c30-4553-b7ce-1ebb90529a18</UserSecretsId>
   </PropertyGroup>
 
 
