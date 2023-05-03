@@ -43,8 +43,8 @@ namespace ImageUploadDemo
             app.UseAuthorization();
             app.MapControllers();
             
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
+            //app.UseDefaultFiles();
+            //app.UseStaticFiles();
             
             app.MapHub<ImageHub>("/imageHub");
             
