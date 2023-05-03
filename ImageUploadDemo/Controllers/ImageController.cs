@@ -26,12 +26,10 @@ namespace ImageUploadDemo.Controllers
             _hubContext = hubContext;
         }
 
-
         public class FileUploadAPI
         {
             public IFormFile files { get; set; }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Post(List<IFormFile> files)
@@ -55,7 +53,6 @@ namespace ImageUploadDemo.Controllers
                         // Set the blob content type
                         blob.Properties.ContentType = formFile.ContentType;
 
-
                         var filePath = Path.GetTempFileName();
                         {
                             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -63,7 +60,6 @@ namespace ImageUploadDemo.Controllers
                                 await formFile.CopyToAsync(stream);
                             }
                         }
-
 
                         var newFilePath = Path.GetTempFileName();
                         try
@@ -167,9 +163,9 @@ namespace ImageUploadDemo.Controllers
             }
         }
 
-
         [HttpGet]
         [Route("GetImage")]
+        
         public async Task<IActionResult> GetImage(int number)
         {
             // DEPRECATED
@@ -182,7 +178,6 @@ namespace ImageUploadDemo.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
 
         [HttpGet]
         [Route("GetMaxNumber")]
@@ -198,14 +193,12 @@ namespace ImageUploadDemo.Controllers
             }
         }
 
-
         [HttpGet]
         [Route("GetHealth")]
         public async Task<IActionResult> GetHealth()
         {
             return Ok("healthy");
         }
-
 
         private async Task<NextNum> GetNextImage(int getNumber)
         {

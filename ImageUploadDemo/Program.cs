@@ -41,6 +41,7 @@ namespace ImageUploadDemo
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
+            // app.UseRouting();
             app.MapControllers();
             
             //app.UseDefaultFiles();
