@@ -44,8 +44,10 @@ namespace ImageUploadDemo
         {
             app.UseCors("CorsPolicy");
             
+            app.UseDefaultFiles();
+            
             app.UseHttpsRedirection();
-            // app.UseStaticFiles();
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthorization();
             

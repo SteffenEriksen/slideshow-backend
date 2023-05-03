@@ -38,10 +38,14 @@ namespace ImageUploadDemo
             
             var app = builder.Build();
             app.UseCors("CorsPolicy");
-            
+
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
+            
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+            
             app.MapHub<ImageHub>("/imageHub");
             
             app.Run();
