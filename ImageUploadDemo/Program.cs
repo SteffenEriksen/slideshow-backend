@@ -20,11 +20,8 @@ namespace ImageUploadDemo
                 {
                     builder.AllowAnyMethod().AllowAnyHeader()
                         .WithOrigins(
-                            "http://localhost:3000", 
-                            "https://ac-slide.azurewebsites.net", 
-                            "https://ac-upload.azurewebsites.net",
-                            "http://andersogceline.com",
-                            "https://andersogceline.com"
+                            "https://ac-slideadmin.azurewebsites.net", 
+                            "https://ac-up.azurewebsites.net"
                         )
                         .AllowCredentials();
                 })
