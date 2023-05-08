@@ -21,7 +21,8 @@ namespace ImageUploadDemo
                     builder.AllowAnyMethod().AllowAnyHeader()
                         .WithOrigins(
                             "https://ac-slideadmin.azurewebsites.net", 
-                            "https://ac-up.azurewebsites.net"
+                            "https://ac-up.azurewebsites.net",
+                            "http://localhost:3000"
                         )
                         .AllowCredentials();
                 })
@@ -38,12 +39,8 @@ namespace ImageUploadDemo
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
-            // app.UseRouting();
+            
             app.MapControllers();
-            
-            //app.UseDefaultFiles();
-            //app.UseStaticFiles();
-            
             app.MapHub<ImageHub>("/imageHub");
             
             app.Run();
