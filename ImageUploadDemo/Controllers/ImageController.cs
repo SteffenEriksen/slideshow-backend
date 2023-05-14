@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.Zip;
 using ImageMagick;
 using ImageUploadDemo.Hubs;
 using Microsoft.AspNetCore.Http;
@@ -44,7 +46,7 @@ namespace ImageUploadDemo.Controllers
                 {
                     if (formFile.Length > 0)
                     {
-                        var fileName = $"{formFile.FileName}___{Guid.NewGuid()}";
+                        var fileName = $"{Guid.NewGuid()}___{formFile.FileName}";
 
                         // Retrieve reference to a blob
                         var blobContainer = await BlobHelper.GetBlobContainer(_config);
@@ -164,28 +166,15 @@ namespace ImageUploadDemo.Controllers
         }
 
         [HttpGet]
-        [Route("GetImage")]
-        
-        public async Task<IActionResult> GetImage(int number)
+        [Route("GetAllImages")]
+        public async Task<IActionResult> GetAllImages()
         {
-            // DEPRECATED
             try
             {
-                return Ok(await GetNextImage(number));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+                var ms = await PerformDownloadImagesAsZip();
 
-        [HttpGet]
-        [Route("GetMaxNumber")]
-        public async Task<IActionResult> GetMaxNumber()
-        {
-            try
-            {
-                return Ok(await GetMaxNumberFromStorage());
+                //return File(ms, "application/x-zip-compressed", "images.zip");
+                return File(ms, "application/zip", "images.zip");
             }
             catch (Exception ex)
             {
@@ -200,71 +189,20 @@ namespace ImageUploadDemo.Controllers
             return Ok("healthy");
         }
 
-        private async Task<NextNum> GetNextImage(int getNumber)
+
+        private async Task<MemoryStream> PerformDownloadImagesAsZip()
         {
-            if (getNumber < 1) getNumber = 1;
-
-            var images = await GetImagesFromBlob();
-            if (images.Count == 0) return new NextNum(1, "");
-
-            var max = images.Keys.Max();
-            var loopFailsafeCount = 1000;
-            var count = 0;
-
-            while (true)
-            {
-                if (getNumber <= max)
-                {
-                    count++;
-                    if (count > loopFailsafeCount) throw new Exception("Loop failsafe over 1000");
-
-                    if (images.ContainsKey(getNumber))
-                    {
-                        var nextNum = getNumber + 1;
-                        return new NextNum(nextNum, images[getNumber]);
-                    }
-
-                    getNumber += 1;
-                }
-                else getNumber = 1;
-            }
-        }
-
-
-
-        private async Task<int> GetMaxNumberFromStorage()
-        {
-            var images = await GetImagesFromBlob();
-
-            return images.Count > 0 ? images.Keys.Max() : 0;
-        }
-
-        private async Task<Dictionary<int, string>> GetImagesFromBlob()
-        {
-
             var container = await BlobHelper.GetBlobContainer(_config);
-            await container.CreateIfNotExistsAsync();
+            var imageUrls = GetImageUrlsAsync(container);
 
-            var list = container.ListBlobsSegmentedAsync(new BlobContinuationToken()).Result.Results;
-            if (list.ToList().Count == 0) return new Dictionary<int, string>();
-
-            var listSplitted = list.Where(e => e.Uri.AbsoluteUri.Contains("___"))
-                .ToDictionary(e => int.Parse(e.Uri.AbsoluteUri.Split(new string[] { "___" }, StringSplitOptions.None)[1]), e => e.Uri.AbsoluteUri);
-
-            return listSplitted;
+            return await ZipHelper.GetImagesFromAzureToZip(container, imageUrls);
         }
 
-
-        class NextNum
+        private List<string> GetImageUrlsAsync(CloudBlobContainer container)
         {
-            public string ImageUrl { get; set; }
-            public int NextNumber { get; set; }
-
-            public NextNum(int num, string url)
-            {
-                ImageUrl = url;
-                NextNumber = num;
-            }
+            var list = container.ListBlobsSegmentedAsync(new BlobContinuationToken()).Result.Results;
+            return list.Select(e => e.Uri.AbsoluteUri).ToList();
         }
+
     }
 }
