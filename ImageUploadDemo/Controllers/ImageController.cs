@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using ICSharpCode.SharpZipLib.Zip;
 using ImageMagick;
 using ImageUploadDemo.Hubs;
 using Microsoft.AspNetCore.Http;
@@ -172,6 +170,41 @@ namespace ImageUploadDemo.Controllers
             try
             {
                 var ms = await PerformDownloadImagesAsZip();
+
+                //return File(ms, "application/x-zip-compressed", "images.zip");
+                return File(ms, "application/zip", "images.zip");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet]
+        [Route("GetZippedImages")]
+        public async Task<IActionResult> DownloadImagesFromAzureWithTempStorage()
+        {
+            try
+            {
+                var filePath = @"images.zip";
+                //var fullPath = System.IO.Path.GetFullPath(filePath);
+
+                //var path = Path.GetFileName(@"images.zip");
+                //return File(path, "application/zip");
+
+                var container = await BlobHelper.GetBlobContainer(_config);
+                var imageUrls = GetImageUrlsAsync(container);
+
+                if (true)
+                {
+                    await ZipHelper.DownloadImagesFromAzureWithTempStorage2(container, imageUrls);
+
+                    var exist = System.IO.File.Exists(filePath);
+
+                    return File(filePath, "application/zip");
+                }
+
+                var ms = await ZipHelper.DownloadImagesFromAzureWithTempStorage3(container, imageUrls);
+                //var ms = await PerformDownloadImagesAsZip();
 
                 //return File(ms, "application/x-zip-compressed", "images.zip");
                 return File(ms, "application/zip", "images.zip");
