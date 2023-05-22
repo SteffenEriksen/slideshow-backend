@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.Zip;
 using ImageMagick;
 using ImageUploadDemo.Hubs;
 using Microsoft.AspNetCore.Http;
@@ -164,50 +165,38 @@ namespace ImageUploadDemo.Controllers
         }
 
         [HttpGet]
-        [Route("GetAllImages")]
-        public async Task<IActionResult> GetAllImages()
-        {
-            try
-            {
-                var ms = await PerformDownloadImagesAsZip();
-
-                //return File(ms, "application/x-zip-compressed", "images.zip");
-                return File(ms, "application/zip", "images.zip");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-        [HttpGet]
         [Route("GetZippedImages")]
-        public async Task<IActionResult> DownloadImagesFromAzureWithTempStorage()
+        public async Task<IActionResult> GetZippedImages()
         {
             try
             {
-                var filePath = @"images.zip";
-                //var fullPath = System.IO.Path.GetFullPath(filePath);
-
-                //var path = Path.GetFileName(@"images.zip");
-                //return File(path, "application/zip");
-
                 var container = await BlobHelper.GetBlobContainer(_config);
                 var imageUrls = GetImageUrlsAsync(container);
 
+                var filenames = imageUrls.Select(imageUrl => imageUrl.Split(new string[] { "/" }, StringSplitOptions.None).Last()).ToList();
+
                 if (true)
                 {
-                    await ZipHelper.DownloadImagesFromAzureWithTempStorage2(container, imageUrls);
+                    var outputMemStream = new MemoryStream();
+                    var zipOutputStream = new ZipOutputStream(outputMemStream);
 
-                    var exist = System.IO.File.Exists(filePath);
+                    zipOutputStream.IsStreamOwner = false;
+                    zipOutputStream.SetLevel(5);
 
-                    return File(filePath, "application/zip");
+                    foreach (var filename in filenames)
+                    {
+                        var entry = new ZipEntry(filename);
+                        zipOutputStream.PutNextEntry(entry);
+                        var blob = container.GetBlockBlobReference(filename);
+                        await blob.DownloadToStreamAsync(zipOutputStream);
+                    }
+
+                    zipOutputStream.Finish();
+                    zipOutputStream.Close();
+
+                    outputMemStream.Position = 0;
+                    return File(outputMemStream, "application/zip", "images.zip");
                 }
-
-                var ms = await ZipHelper.DownloadImagesFromAzureWithTempStorage3(container, imageUrls);
-                //var ms = await PerformDownloadImagesAsZip();
-
-                //return File(ms, "application/x-zip-compressed", "images.zip");
-                return File(ms, "application/zip", "images.zip");
             }
             catch (Exception ex)
             {

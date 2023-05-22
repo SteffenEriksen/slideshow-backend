@@ -1,4 +1,5 @@
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.Collections.Generic;
@@ -6,14 +7,24 @@ using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace ImageUploadDemo
 {
     public static class ZipHelper
     {
+        public readonly static string ImageZipFilename = "images.zip";
         private const string ImagePath = "images";
+
+
+        public static async Task<List<string>> DownloadImagesFromAzure(CloudBlobContainer container, List<string> imageUrls)
+        {
+            var filenames = GetFilenames(imageUrls);
+
+            await DownloadImagesToServerFromAzureBlob(container, filenames);
+
+            return filenames;
+        }
 
         public static async Task<MemoryStream> GetImagesFromAzureToZip(CloudBlobContainer container, List<string> imageUrls)
         {
@@ -50,13 +61,15 @@ namespace ImageUploadDemo
         }
 
 
+
         public static async Task<MemoryStream> DownloadImagesFromAzureWithTempStorage(CloudBlobContainer container, List<string> imageUrls)
         {
             var filenames = GetFilenames(imageUrls);
 
             await DownloadImagesToServerFromAzureBlob(container, filenames);
 
-            return CreateZipFromFilesWithStream(filenames);
+            //return CreateZipFromFilesWithStream(filenames);
+            return CreateZipFromFilesWithStream2(filenames);
         }
 
         public static async Task DownloadImagesFromAzureWithTempStorage2(CloudBlobContainer container, List<string> imageUrls)
@@ -100,10 +113,9 @@ namespace ImageUploadDemo
             //string filePath = @"C:\myfolder\myfile.ext";
 
             //name of the zip file you will be creating
-            var zipFileName = @"images.zip";
 
-            if (File.Exists(zipFileName))
-                File.Delete(zipFileName);
+            if (File.Exists(ImageZipFilename))
+                File.Delete(ImageZipFilename);
 
             byte[] result;
 
@@ -114,7 +126,7 @@ namespace ImageUploadDemo
             {
                 using (ZipArchive zipArchive = new ZipArchive(zipArchiveMemoryStream, ZipArchiveMode.Create, true))
                 {
-                    ZipArchiveEntry zipEntry = zipArchive.CreateEntry(zipFileName);
+                    ZipArchiveEntry zipEntry = zipArchive.CreateEntry(ImageZipFilename);
                     using (Stream entryStream = zipEntry.Open())
                     {
                         using (var tmpMemory = new MemoryStream(System.IO.File.ReadAllBytes($"{ImagePath}/{filenameOne}")))
@@ -122,6 +134,7 @@ namespace ImageUploadDemo
                             tmpMemory.CopyTo(entryStream);
                         };
                     }
+                    zipArchive.Dispose();
                 }
 
                 zipArchiveMemoryStream.Seek(0, SeekOrigin.Begin);
@@ -129,17 +142,15 @@ namespace ImageUploadDemo
             }
 
             return result;
-            //return File(result, "application/zip", zipFileName);
+            //return File(result, "application/zip", ImageZipFilename);
         }
 
         private static void CreateZipFromFolder()
         {
-            var filePath = @"images.zip";
+            if (File.Exists(ImageZipFilename)) 
+                File.Delete(ImageZipFilename);
 
-            if (File.Exists(filePath)) 
-                File.Delete(filePath);
-
-            System.IO.Compression.ZipFile.CreateFromDirectory(ImagePath, filePath);
+            System.IO.Compression.ZipFile.CreateFromDirectory(ImagePath, ImageZipFilename);
         }
 
         private static void DeleteTempDownloadFolder()
@@ -165,6 +176,37 @@ namespace ImageUploadDemo
                 memoryStream.Position = 0;
                 return memoryStream;
                 //return File(memoryStream, "application/zip", "my.zip");
+            }
+        }
+
+        public static MemoryStream CreateZipFromFilesWithStream2(List<string> filenames)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var filename in filenames)
+                    {
+                        var fileInArchive = zipArchive.CreateEntry(ImageZipFilename, CompressionLevel.Optimal);
+                        var fileBytes = System.IO.File.ReadAllBytes($"{ImagePath}/{filename}");
+
+                        using (var entryStream = fileInArchive.Open())
+                        {
+                            using (var fileToCompressStream = new MemoryStream(fileBytes))
+                            {
+                                fileToCompressStream.CopyTo(entryStream);
+                            }
+                        }
+                    }
+                }
+
+                using (var fileStream = new FileStream(ImageZipFilename, FileMode.Create))
+                {
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    memoryStream.CopyTo(fileStream);
+                }
+
+                return memoryStream;
             }
         }
 
