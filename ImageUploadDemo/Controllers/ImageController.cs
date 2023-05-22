@@ -175,28 +175,27 @@ namespace ImageUploadDemo.Controllers
 
                 var filenames = imageUrls.Select(imageUrl => imageUrl.Split(new string[] { "/" }, StringSplitOptions.None).Last()).ToList();
 
-                if (true)
+                var outputMemStream = new MemoryStream();
+                var zipOutputStream = new ZipOutputStream(outputMemStream);
+
+                zipOutputStream.IsStreamOwner = false;
+                zipOutputStream.SetLevel(5);
+
+                foreach (var filename in filenames)
                 {
-                    var outputMemStream = new MemoryStream();
-                    var zipOutputStream = new ZipOutputStream(outputMemStream);
+                    var cleanerFilename = filename.Split(new string[] { "___" }, StringSplitOptions.None).Last();
 
-                    zipOutputStream.IsStreamOwner = false;
-                    zipOutputStream.SetLevel(5);
-
-                    foreach (var filename in filenames)
-                    {
-                        var entry = new ZipEntry(filename);
-                        zipOutputStream.PutNextEntry(entry);
-                        var blob = container.GetBlockBlobReference(filename);
-                        await blob.DownloadToStreamAsync(zipOutputStream);
-                    }
-
-                    zipOutputStream.Finish();
-                    zipOutputStream.Close();
-
-                    outputMemStream.Position = 0;
-                    return File(outputMemStream, "application/zip", "images.zip");
+                    var entry = new ZipEntry(cleanerFilename);
+                    zipOutputStream.PutNextEntry(entry);
+                    var blob = container.GetBlockBlobReference(filename);
+                    await blob.DownloadToStreamAsync(zipOutputStream);
                 }
+
+                zipOutputStream.Finish();
+                zipOutputStream.Close();
+
+                outputMemStream.Position = 0;
+                return File(outputMemStream, "application/zip", "images.zip");
             }
             catch (Exception ex)
             {
@@ -209,15 +208,6 @@ namespace ImageUploadDemo.Controllers
         public async Task<IActionResult> GetHealth()
         {
             return Ok("healthy");
-        }
-
-
-        private async Task<MemoryStream> PerformDownloadImagesAsZip()
-        {
-            var container = await BlobHelper.GetBlobContainer(_config);
-            var imageUrls = GetImageUrlsAsync(container);
-
-            return await ZipHelper.GetImagesFromAzureToZip(container, imageUrls);
         }
 
         private List<string> GetImageUrlsAsync(CloudBlobContainer container)
